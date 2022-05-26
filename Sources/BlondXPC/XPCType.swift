@@ -41,3 +41,42 @@ public struct XPCType: RawRepresentable, CustomStringConvertible {
     }
   }
 }
+
+extension XPCType: Equatable {}
+
+public extension XPCType {
+  @_alwaysEmitIntoClient
+  static var activity: Self { .init(rawValue: XPC_TYPE_ACTIVITY) }
+  @_alwaysEmitIntoClient
+  static var array: Self { .init(rawValue: XPC_TYPE_ARRAY) }
+  @_alwaysEmitIntoClient
+  static var bool: Self { .init(rawValue: XPC_TYPE_BOOL) }
+  @_alwaysEmitIntoClient
+  static var connection: Self { .init(rawValue: XPC_TYPE_CONNECTION) }
+  @_alwaysEmitIntoClient
+  static var data: Self { .init(rawValue: XPC_TYPE_DATA) }
+  @_alwaysEmitIntoClient
+  static var date: Self { .init(rawValue: XPC_TYPE_DATE) }
+  @_alwaysEmitIntoClient
+  static var dictionary: Self { .init(rawValue: XPC_TYPE_DICTIONARY) }
+  @_alwaysEmitIntoClient
+  static var double: Self { .init(rawValue: XPC_TYPE_DOUBLE) }
+  @_alwaysEmitIntoClient
+  static var endpoint: Self { .init(rawValue: XPC_TYPE_ENDPOINT) }
+  @_alwaysEmitIntoClient
+  static var error: Self { .init(rawValue: XPC_TYPE_ERROR) }
+  @_alwaysEmitIntoClient
+  static var fd: Self { .init(rawValue: XPC_TYPE_FD) }
+  @_alwaysEmitIntoClient
+  static var int64: Self { .init(rawValue: XPC_TYPE_INT64) }
+  @_alwaysEmitIntoClient
+  static var null: Self { .init(rawValue: XPC_TYPE_NULL) }
+  @_alwaysEmitIntoClient
+  static var shmem: Self { .init(rawValue: XPC_TYPE_SHMEM) }
+  @_alwaysEmitIntoClient
+  static var string: Self { .init(rawValue: XPC_TYPE_STRING) }
+  @_alwaysEmitIntoClient
+  static var uint64: Self { .init(rawValue: XPC_TYPE_UINT64) }
+  @_alwaysEmitIntoClient
+  static var uuid: Self { .init(rawValue: XPC_TYPE_UUID) }
+}
