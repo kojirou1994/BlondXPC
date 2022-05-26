@@ -1,0 +1,14 @@
+{
+  "pins" : [
+    {
+      "identity" : "cutility",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/kojirou1994/CUtility",
+      "state" : {
+        "revision" : "a4d1fef0cb00016ac4fa2c7093c12269a863cf0a",
+        "version" : "0.1.4"
+      }
+    }
+  ],
+  "version" : 2
+}
