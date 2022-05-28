@@ -1,6 +1,7 @@
 import XPC
 import CUtility
 import Foundation
+import System
 
 public struct XPCObject: RawRepresentable {
   public init(rawValue: xpc_object_t) {
@@ -9,7 +10,12 @@ public struct XPCObject: RawRepresentable {
 
   public let rawValue: xpc_object_t
 }
+/*
 
+ pure stack value use init
+ heap values use static func
+
+ */
 // MARK: Create
 public extension XPCObject {
   init(_ value: Bool) {
@@ -28,12 +34,36 @@ public extension XPCObject {
     rawValue = xpc_double_create(value)
   }
 
-  init(_ value: UnsafePointer<CChar>) {
-    rawValue = xpc_string_create(value)
+  init(_ value: UUID) {
+    rawValue = withUnsafeBytes(of: value.uuid) { buffer in
+      xpc_uuid_create(buffer.baseAddress!)
+    }
   }
 
-  init(format: UnsafePointer<CChar>, _ ap: CVaListPointer) {
-    rawValue = xpc_string_create_with_format_and_arguments(format, ap)
+  init(_ value: CFUUID) {
+    self.init(CFUUIDGetUUIDBytes(value))
+  }
+
+  init(_ value: CFUUIDBytes) {
+    rawValue = withUnsafeBytes(of: value) { buffer in
+      xpc_uuid_create(buffer.baseAddress!)
+    }
+  }
+
+  init(_ value: XPCArray) {
+    rawValue = value.rawValue
+  }
+
+  init(_ value: XPCDictionary) {
+    rawValue = value.rawValue
+  }
+
+  static func string(_ value: UnsafePointer<CChar>) -> Self {
+    .init(rawValue: xpc_string_create(value))
+  }
+
+  static func string(format: UnsafePointer<CChar>, _ ap: CVaListPointer) -> Self {
+    .init(rawValue: xpc_string_create_with_format_and_arguments(format, ap))
   }
 
   init(_ value: __DispatchData) {
@@ -52,6 +82,11 @@ public extension XPCObject {
 
   static func duplicatedFD(_ fd: Int32) -> Self? {
     xpc_fd_create(fd).map(Self.init)
+  }
+
+  @available(macOS 11.0, iOS 14.0, watchOS 7.0, tvOS 14.0, *)
+  static func duplicatedFD(_ fd: FileDescriptor) -> Self? {
+    .duplicatedFD(fd.rawValue)
   }
 
   static func date(interval: Int64? = nil) -> Self {
@@ -102,6 +137,15 @@ public extension XPCObject {
     xpc_string_get_length(rawValue)
   }
 
+  var unsafeDate: Int64 {
+    xpc_date_get_value(rawValue)
+  }
+
+  /// don't free result
+  var unsafeUUID: UnsafePointer<UInt8>? {
+    xpc_uuid_get_bytes(rawValue)
+  }
+
   // MARK: Safe Get
   var bool: Bool? {
     guard type == .bool else {
@@ -133,10 +177,62 @@ public extension XPCObject {
 
   func copyDataBytes(into buffer: UnsafeMutableRawBufferPointer,
                      offset: Int) -> Int {
-    guard let ptr = buffer.baseAddress else {
+    guard let baseAddress = buffer.baseAddress else {
       return 0
     }
-    return xpc_data_get_bytes(rawValue, ptr, offset, buffer.count)
+    return xpc_data_get_bytes(rawValue, baseAddress, offset, buffer.count)
+  }
+
+  var string: String? {
+    guard type == .string else {
+      return nil
+    }
+    return String(decoding: UnsafeRawBufferPointer(start: unsafeStringPointer, count: stringLength), as: UTF8.self)
+  }
+
+  var duplicateFD: Int32? {
+    let fd = xpc_fd_dup(rawValue)
+    return fd == -1 ? nil : fd
+  }
+
+  var date: Int64? {
+    guard type == .date else {
+      return nil
+    }
+    return unsafeDate
+  }
+
+  var uuidReference: NSUUID? {
+    guard type == .uuid else {
+      return nil
+    }
+    return NSUUID(uuidBytes: unsafeUUID)
+  }
+
+  var uuid: UUID? {
+    guard type == .uuid, let bytes = unsafeUUID else {
+      return nil
+    }
+    return UUID(uuid: (
+      bytes[0], bytes[1], bytes[2], bytes[3],
+      bytes[4], bytes[5], bytes[6], bytes[7],
+      bytes[8], bytes[9], bytes[10], bytes[11],
+      bytes[12], bytes[13], bytes[14], bytes[15]
+    ))
+  }
+
+  var array: XPCArray? {
+    guard type == .array else {
+      return nil
+    }
+    return .init(rawValue: rawValue)
+  }
+
+  var dictionary: XPCDictionary? {
+    guard type == .dictionary else {
+      return nil
+    }
+    return .init(rawValue: rawValue)
   }
 
 }
@@ -165,5 +261,24 @@ extension XPCObject: Equatable, Hashable {
 public extension XPCObject {
   var type: XPCType {
     .init(rawValue: xpc_get_type(rawValue))
+  }
+}
+
+extension XPCObject: ExpressibleByBooleanLiteral, ExpressibleByFloatLiteral,
+                     ExpressibleByIntegerLiteral, ExpressibleByStringLiteral {
+  public init(booleanLiteral value: Bool) {
+    self.init(value)
+  }
+
+  public init(floatLiteral value: Double) {
+    self.init(value)
+  }
+
+  public init(integerLiteral value: Int64) {
+    self.init(value)
+  }
+
+  public init(stringLiteral value: String) {
+    self = .string(value)
   }
 }
