@@ -235,6 +235,22 @@ public extension XPCObject {
     return .init(rawValue: rawValue)
   }
 
+  var native: Any? {
+    switch type {
+    case .array: return array!.map(\.native)
+    case .bool: return unsafeBool
+    case .date: return unsafeDate
+    case .dictionary: return dictionary!.toNative()
+    case .double: return unsafeDouble
+    case .int64: return unsafeInt64
+    case .null: return NSNull()
+    case .string: return string!
+    case .uint64: return unsafeUInt64
+    case .uuid: return uuid!
+    default: return nil
+    }
+  }
+
 }
 
 // MARK: Copy

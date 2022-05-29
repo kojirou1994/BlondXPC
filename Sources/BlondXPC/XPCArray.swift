@@ -30,6 +30,7 @@ extension XPCArray: MutableCollection, BidirectionalCollection, RandomAccessColl
     }
     nonmutating set {
       precondition((startIndex..<endIndex) ~= position)
+      check(newValue)
       xpc_array_set_value(rawValue, position, newValue.rawValue)
     }
   }
@@ -48,7 +49,12 @@ public extension XPCArray {
   }
 
   func append(_ newElement: XPCObject) {
+    check(newElement)
     xpc_array_append_value(rawValue, newElement.rawValue)
+  }
+
+  private func check(_ newElement: XPCObject) {
+    precondition(newElement.rawValue !== rawValue, "add array to itself will cause memory leak! use copy.")
   }
 }
 
@@ -56,4 +62,12 @@ extension XPCArray: ExpressibleByArrayLiteral {
   public init(arrayLiteral elements: XPCObject...) {
     self.init(elements)
   }
+}
+
+public extension XPCArray {
+
+  func toNative() -> [Any] {
+    compactMap(\.native)
+  }
+
 }
