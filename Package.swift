@@ -10,6 +10,7 @@ let package = Package(
   products: [
     .library(name: "BlondXPC", targets: ["BlondXPC"]),
     .library(name: "BlondXPCEncoder", targets: ["BlondXPCEncoder"]),
+    .library(name: "BlondXPCRPC", targets: ["BlondXPCRPC"]),
   ],
   dependencies: [
     .package(url: "https://github.com/kojirou1994/CUtility.git", from: "0.0.1"),
@@ -23,6 +24,9 @@ let package = Package(
     .target(
       name: "BlondXPCEncoder",
       dependencies: ["BlondXPC"]),
+    .target(
+      name: "BlondXPCRPC",
+      dependencies: ["BlondXPCEncoder"]),
     .testTarget(
       name: "BlondXPCTests",
       dependencies: ["BlondXPC"]),
