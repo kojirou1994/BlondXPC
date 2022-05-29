@@ -9,18 +9,28 @@ public struct XPCDictionary: RawRepresentable {
 }
 
 public extension XPCDictionary {
+
+  @_alwaysEmitIntoClient
   init() {
     rawValue = xpc_dictionary_create(nil, nil, 0)
   }
 
+  @_alwaysEmitIntoClient
   func createReply() -> Self? {
     xpc_dictionary_create_reply(rawValue).map(Self.init)
   }
 
+  @_alwaysEmitIntoClient
+  func remoteConnection() -> XPCConnection? {
+    xpc_dictionary_get_remote_connection(rawValue).map(XPCConnection.init)
+  }
+
+  @_alwaysEmitIntoClient
   var count: Int {
     xpc_dictionary_get_count(rawValue)
   }
 
+  @_alwaysEmitIntoClient
   subscript(key: UnsafePointer<CChar>) -> XPCObject? {
     get {
       xpc_dictionary_get_value(rawValue, key).map(XPCObject.init)
@@ -40,6 +50,7 @@ extension XPCDictionary: ExpressibleByDictionaryLiteral {
 }
 
 public extension XPCDictionary {
+  @_alwaysEmitIntoClient
   func toNative() -> [String: Any] {
     var result = [String: Any]()
     xpc_dictionary_apply(rawValue) { key, value in

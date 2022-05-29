@@ -14,8 +14,6 @@ extension XPCArray: MutableCollection, BidirectionalCollection, RandomAccessColl
     i + 1
   }
 
-  public typealias Element = XPCObject
-
   public var count: Int {
     xpc_array_get_count(rawValue)
   }
@@ -38,21 +36,25 @@ extension XPCArray: MutableCollection, BidirectionalCollection, RandomAccessColl
 
 public extension XPCArray {
 
+  @_alwaysEmitIntoClient
   init() {
     rawValue = xpc_array_create(nil, 0)
   }
 
+  @_alwaysEmitIntoClient
   init<T: Sequence>(_ elements: T) where T.Element == XPCObject {
     rawValue = Array(elements).withUnsafeBufferPointer { buffer in
       xpc_array_create(.init(OpaquePointer(buffer.baseAddress)), buffer.count)
     }
   }
 
+  @_alwaysEmitIntoClient
   func append(_ newElement: XPCObject) {
     check(newElement)
     xpc_array_append_value(rawValue, newElement.rawValue)
   }
 
+  @_alwaysEmitIntoClient
   private func check(_ newElement: XPCObject) {
     precondition(newElement.rawValue !== rawValue, "add array to itself will cause memory leak! use copy.")
   }
@@ -66,6 +68,7 @@ extension XPCArray: ExpressibleByArrayLiteral {
 
 public extension XPCArray {
 
+  @_alwaysEmitIntoClient
   func toNative() -> [Any] {
     compactMap(\.native)
   }
