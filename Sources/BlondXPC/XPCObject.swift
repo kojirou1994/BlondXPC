@@ -73,6 +73,9 @@ public extension XPCObject {
   static var null: Self { .init(rawValue: xpc_null_create()) }
   static var `true`: Self { .init(rawValue: XPC_BOOL_TRUE) }
   static var `false`: Self { .init(rawValue: XPC_BOOL_FALSE) }
+  static var errorConnectionInterrupted: Self { .init(rawValue: XPC_ERROR_CONNECTION_INTERRUPTED) }
+  static var errorConnectionInvalid: Self { .init(rawValue: XPC_ERROR_CONNECTION_INVALID) }
+  static var errorTerminationImminent: Self { .init(rawValue: XPC_ERROR_TERMINATION_IMMINENT) }
 
   static func data<T: ContiguousBytes>(bytesCopiedFrom bytes: T) -> Self {
     bytes.withUnsafeBytes { buffer in
@@ -261,6 +264,12 @@ public extension XPCObject {
 
   func copyDescription() -> LazyCopiedCString {
     .init(cString: xpc_copy_description(rawValue), freeWhenDone: true)
+  }
+}
+
+extension XPCObject: CustomStringConvertible {
+  public var description: String {
+    copyDescription().string
   }
 }
 
