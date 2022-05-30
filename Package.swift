@@ -30,5 +30,7 @@ let package = Package(
     .testTarget(
       name: "BlondXPCTests",
       dependencies: ["BlondXPC"]),
+
+    .executableTarget(name: "AnonymousXPCExample", dependencies: ["BlondXPC"]),
   ]
 )
