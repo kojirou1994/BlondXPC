@@ -1,4 +1,5 @@
 import BlondXPC
+import Foundation
 
 public struct BlondXPCRPCResponse {
   let success: Bool
@@ -29,23 +30,32 @@ extension BlondXPCRPCDelegate {
       }
     case .dictionary:
       print(event)
-      let event = event.dictionary!
-      let remote = event.remoteConnection()!
+      let eventDictionary = event.unsafeDictionary
+      let remote = eventDictionary.remoteConnection!
 
-      if let reply = event.createReply() {
-        reply["id"] = event["id"]
+      if let replyDictionary = eventDictionary.createReply() {
+        if let xpcrpc = eventDictionary["xpcrpc"]?.string {
+          replyDictionary["id"] = eventDictionary["id"]
+          NSLog("XPCRPC get request, version: \(xpcrpc), id: \(eventDictionary["id"]!.unsafeUInt64)")
 
-        let response = handle(method: event["method"]!.string!, body: event["params"]!)
+          let response = handle(method: eventDictionary["method"]!.string!, body: eventDictionary["params"]!)
 
-        let key = response.success ? "success" : "error"
-        reply[key] = response.body
+          let key = response.success ? "success" : "error"
+          replyDictionary[key] = response.body
 
-        remote.send(message: .init(reply))
+          remote.send(message: .init(replyDictionary))
+        } else {
+          // not xpcrpc request
+          NSLog("It's not xpcrpc request!")
+          assertionFailure("Use \(String(describing: BlondXPCRPCClient.self)) to send request!")
+          remote.cancel()
+        }
       } else {
         // no reply context
       }
     default:
-      fatalError("wrong type!")
+      assertionFailure("wrong type!")
+      return
     }
   }
 }

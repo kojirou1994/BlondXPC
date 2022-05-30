@@ -189,6 +189,21 @@ public extension XPCObject {
     xpc_uuid_get_bytes(rawValue)
   }
 
+  @_alwaysEmitIntoClient
+  var unsafeArray: XPCArray {
+    .init(rawValue: rawValue)
+  }
+
+  @_alwaysEmitIntoClient
+  var unsafeDictionary: XPCDictionary {
+    .init(rawValue: rawValue)
+  }
+
+  @_alwaysEmitIntoClient
+  var unsafeConnection: XPCConnection {
+    .init(rawValue: rawValue)
+  }
+
   // MARK: Safe Get
 
   @_alwaysEmitIntoClient
@@ -280,7 +295,7 @@ public extension XPCObject {
     guard type == .array else {
       return nil
     }
-    return .init(rawValue: rawValue)
+    return unsafeArray
   }
 
   @_alwaysEmitIntoClient
@@ -288,7 +303,15 @@ public extension XPCObject {
     guard type == .dictionary else {
       return nil
     }
-    return .init(rawValue: rawValue)
+    return unsafeDictionary
+  }
+
+  @_alwaysEmitIntoClient
+  var connection: XPCConnection? {
+    guard type == .connection else {
+      return nil
+    }
+    return unsafeConnection
   }
 
   @_alwaysEmitIntoClient

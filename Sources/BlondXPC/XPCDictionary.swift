@@ -21,7 +21,7 @@ public extension XPCDictionary {
   }
 
   @_alwaysEmitIntoClient
-  func remoteConnection() -> XPCConnection? {
+  var remoteConnection: XPCConnection? {
     xpc_dictionary_get_remote_connection(rawValue).map(XPCConnection.init)
   }
 

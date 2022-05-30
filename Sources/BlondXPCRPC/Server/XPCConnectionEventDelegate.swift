@@ -24,8 +24,8 @@ public struct XPCConnectionEventHandlerExample: XPCConnectionEventDelegate {
     case .dictionary:
       print("received event:")
       print(event)
-      let event = event.dictionary!
-      let remote = event.remoteConnection()!
+      let event = event.unsafeDictionary
+      let remote = event.remoteConnection!
 
       if let reply = event.createReply() {
         reply["reply"] = "Hi from XPC!"

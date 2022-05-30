@@ -7,8 +7,9 @@ public final class BlondXPCRPCClient {
     self.connection = connection
   }
 
-  public let connection: XPCConnection
-  private var currentID: UInt64 = 0
+  /// replace invalid connection while keeping old configuration
+  public var connection: XPCConnection
+  public private(set) var currentID: UInt64 = 0
   private let idLock = NSLock()
   let encoder: BlondXPCEncoder = .init()
   let decoder: BlondXPCDecoder = .init()
@@ -16,6 +17,7 @@ public final class BlondXPCRPCClient {
   @available(macOS 10.15, *)
   public func result<T, R, E>(method: String, _ body: T) async throws -> Result<R, E> where T: Encodable, R: Decodable, E: Decodable, E: Error {
     let req = XPCDictionary()
+    req["xpcrpc"] = "1"
     req["method"] = XPCObject.string(method)
     idLock.lock()
     req["id"] = XPCObject(currentID)
@@ -24,11 +26,13 @@ public final class BlondXPCRPCClient {
 
     req["params"] = try encoder.encode(body)
 
-    let reply = connection.waitReply(message: XPCObject(req)).dictionary!
+    let reply = connection.waitReply(fromMessage: XPCObject(req))
+    print(reply)
+    let replyDic = reply.dictionary!
 
-    if let success = reply["success"] {
+    if let success = replyDic["success"] {
       return .success(try decoder.decode(success))
-    } else if let error = reply["error"] {
+    } else if let error = replyDic["error"] {
       return .failure(try decoder.decode(error))
     } else {
       fatalError()

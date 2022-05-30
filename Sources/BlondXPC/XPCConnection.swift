@@ -91,9 +91,20 @@ public extension XPCConnection {
   }
 
   @_alwaysEmitIntoClient
-  func waitReply(message: XPCObject) -> XPCObject {
+  func waitReply(fromMessage message: XPCObject) -> XPCObject {
     assert(message.type == .dictionary)
     return .init(rawValue: xpc_connection_send_message_with_reply_sync(rawValue, message.rawValue))
+  }
+
+  @_alwaysEmitIntoClient
+  @available(macOS 10.15, *)
+  func reply(fromMessage message: XPCObject) async -> XPCObject {
+    assert(message.type == .dictionary)
+    return await withUnsafeContinuation { continuation in
+      send(message: message) { rawValue in
+        continuation.resume(returning: .init(rawValue: rawValue))
+      }
+    }
   }
 
   @_alwaysEmitIntoClient
